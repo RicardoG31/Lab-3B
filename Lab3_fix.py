@@ -11,7 +11,7 @@ Created on Mon Oct 29 08:19:37 2018
 # Assignment: Lab 3 B
 # T.A: Saha, Manoj
 # Instructor: Diego Aguirre
-# Date of last modification: 11/05/18
+# Date of last modification: 11/08/18
 
 
 # This program reads a file that contains all english words and inserts them into a tree, selected
@@ -512,39 +512,61 @@ class RedBlackTree:
         node.left.set_child("right", node)
         node.set_child("left", left_right_child)
         
+    def search(self, key):
+        current_node = self.root
+        while current_node is not None:
+            # Return the node if the key matches.
+            if current_node.key == key:
+                return current_node
+            
+            # Navigate to the left if the search key is
+            # less than the node's key.
+            elif key < current_node.key:
+                current_node = current_node.left
+    
+            # Navigate to the right if the search key is
+            # greater than the node's key.
+            else:
+                current_node = current_node.right
+    
+        # The key was not found in the tree.
+        return None
+        
 
 
 
 def AVL(filename):
     #Constructs the tree and inserts all words from the file into the tree
 
-    english_words = AVLTree()
+
+    english_words= AVLTree()
     
     with open(filename) as file:
         for line in file:
             
-            node = Node(line.lower())
+            node = Node(line.lower().replace("\n", ""))
             english_words.insert(node)
 
     return english_words
 
 def RBT(filename):
     #Constructs the tree and inserts all words from the file into the tree
-    global english_words
+
     english_words = RedBlackTree()
     
     with open(filename) as file:
         for line in file:
-            node = Node(line.lower())
+#            node = RBTNode(line.lower().replace("\n", ""), )
 
-            english_words.insert(node)
+            english_words.insert(line.lower().replace("\n", ""))
     return english_words
 
 def print_anagrams(word, prefix=""): 
     #Prints the anagrams of a specific word
     if len(word) <= 1:
         str = prefix + word
-        if english_words.search(str) == str:##str in engish_words: 
+
+        if english_words.search(str):
             print(prefix + word)
             
     else:
@@ -558,35 +580,48 @@ def print_anagrams(word, prefix=""):
 
 
 
-def count_anagrams(count, word, prefix=""):
+def count_anagrams(obj, word, prefix=""):
     #Counts the anagrams found in the tree
           
     if len(word) <= 1:
         str = prefix + word
         if english_words.search(str):
-            count = count + 1
+            obj.count = obj.count + 1
     else:
         for i in range(len(word)):
             cur = word[i: i + 1]
             before = word[0: i] # letters before cur
             after = word[i + 1:] # letters after cur
             if cur not in before: # Check if permutations of cur have not been generated.
-                count_anagrams(before + after, prefix + cur)  
-    return count
+                count_anagrams(obj, before + after, prefix + cur)  
+    return obj.count
+                
 
-def max_anagrams(filename):
+def max_anagrams(obj, filename):
     #Computes the word with the maximum number of anagrams
     file = open(filename)
     max_count = 0
     max_word = ""
-    count = 0
+    
+#    num_words = 4
     for line in file:
-        count = count_anagrams(count, line[0:-1])  # -1 index means last one
-#        print(line[0:-1], count)
-        if count > max_count:
-            max_count = count
-            max_word = line[0:-1]
-    return max_word, max_count
+        obj = Counter()
+        obj.count = count_anagrams(obj, line.replace("\n", ""))  # -1 index means last one
+#        print(line[0:-1], obj.count)
+#        print(obj.count)
+        if obj.count > max_count:
+            max_count = obj.count
+            max_word = line.replace("\n", "")
+#            
+#        num_words -= 1
+#        
+#        if num_words == 0:
+#            break
+        
+        
+    print("Word with more anagrams: " + max_word)
+    print("Max number of anagrams: " + str(max_count))
+        
 
 #def preOrder(root):
 #    if not root:
@@ -594,39 +629,45 @@ def max_anagrams(filename):
 #    print (root.key)
 #    preOrder(root.left)
 #    preOrder(root.right)
+ 
+ #Creates the class of the counter to count the word with more anagrams and the number of anagrams   
+class Counter:
     
+    
+    def __init__(self):
+        self.count = 0
     
            
 def main():
     global english_words
-    count = 0
-    global counter
-    global greatest_word
-    global greatest_count
-    filename = "words.txt"
+
+    filename = "words_short.txt"
     
     tree_type = input("What type of Binary Search Tree do you want? Type 1 for AVL Tree or 2 for Red-Black Tree: ")
     
     
     if tree_type == "1":
+        english_words = AVLTree()
         english_words = AVL(filename)
-        anagram_word = input("Which word do you want to permutate?")
-        print_anagrams(anagram_word)
-        permutation_count = count_anagrams(count, anagram_word)
-        print("Number of permutations of the word: ", permutation_count)
-        more_anagrams, number_anagrams = max_anagrams(filename)
-        print("Word with more anagrams: " + more_anagrams + "Number of anagrams: " + str(number_anagrams))
+
+        
 
         
     elif tree_type == "2":
+        english_words = RedBlackTree()
         english_words = RBT(filename)
-        anagram_word = input("Which word do you want to permutate?")
-        print_anagrams(anagram_word)
-        permutation_count = count_anagrams(count, anagram_word)
-        print("Number of permutations of the word: ", permutation_count)
-        more_anagrams, number_anagrams = max_anagrams(filename)
-        print("Word with more anagrams: " + more_anagrams)
-        print("Number of anagrams: " + str(number_anagrams))
+
+    
+    anagram_word = input("Which word do you want to permutate? ")
+    print_anagrams(anagram_word)
+    
+    obj = Counter()
+    
+    count_anagrams(obj, anagram_word)
+    print("Number of permutations of the word: ", obj.count)
+    
+    max_anagrams(obj, filename)
+
 
     
 main()
